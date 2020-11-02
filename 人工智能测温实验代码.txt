@@ -1,0 +1,47 @@
+/*!
+ * MindPlus
+ * mpython
+ *
+ */
+#include <MPython.h>
+#include <DFRobot_Iot.h>
+#include <DFRobot_DS18B20.h>
+#include <DFRobot_HuskyLens.h>
+#include <mPython_tinywebdb.h>
+
+// 动态变量
+String mind_s_XingMing;
+// 创建对象
+DFRobot_HuskyLens huskylens;
+DFRobot_Iot       myIot;
+mPython_TinyWebDB mydb;
+DFRobot_DS18B20   ds18b20_P1;
+
+
+// 主程序开始
+void setup() {
+	mPython.begin();
+	ds18b20_P1.begin(P1);
+	huskylens.beginI2CUntilSuccess();
+	huskylens.writeAlgorithm(ALGORITHM_FACE_RECOGNITION);
+	myIot.wifiConnect("HUAWEI", "76543210");
+	mydb.setServerParameter("http://tinywebdb.appinventor.space/api", "abcxwb","135b27c1");
+}
+void loop() {
+	huskylens.request();
+	if (huskylens.isAppearDirect(HUSKYLENSResultBlock)) {
+		if (huskylens.isLearned(huskylens.readBlockCenterParameterDirect().ID)) {
+			mind_s_XingMing = mydb.getTag((String(huskylens.readBlockCenterParameterDirect().ID)));
+			display.setCursorLine(1);
+			display.printLine(mind_s_XingMing);
+			display.setCursorLine(2);
+			display.printLine("请保持面向摄像头");
+			display.setCursorLine(3);
+			display.printLine("3s后开始测温");
+			display.setCursorLine(4);
+			display.printLine(ds18b20_P1.getTempC());
+			delay(3000);
+			display.fillScreen(0);
+		}
+	}
+}
